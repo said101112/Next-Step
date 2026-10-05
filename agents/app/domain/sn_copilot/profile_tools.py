@@ -8,7 +8,7 @@
 # ============================================================
 import json
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 
 from app.core import backend_client
 from app.core.config import get_llm

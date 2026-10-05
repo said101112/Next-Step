@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { TestBed } from '@angular/core/testing';
 import Keycloak from 'keycloak-js';
 import { AuthService } from './auth.service';
@@ -32,7 +32,7 @@ describe('AuthService', () => {
     service = TestBed.inject(AuthService);
     
     // Attendre que la promesse du constructeur (loadUserProfile) se résolve
-    await new Promise(process.nextTick);
+    await new Promise<void>((resolve) => setTimeout(resolve, 0));
   });
 
   afterEach(() => {

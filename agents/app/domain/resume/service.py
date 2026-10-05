@@ -1,8 +1,6 @@
 import asyncio
-import os
 import json
 import pymupdf
-from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate
 from fastapi import HTTPException
 from .prompts import SYSTEM_PROMPT
@@ -185,11 +183,11 @@ async def parse_cv_with_ai(cv_text: str) -> dict:
     ])
 
     chain = prompt | llm
-    
+
     try:
         response = await chain.ainvoke({"cv_text": cv_text})
         logger.info(f"🚀 RAW LLM RESPONSE:\n{response.content}\n====================")
-        
+
         # 1. Nettoyage et parsing robuste de la chaîne JSON
         parsed_data = _coerce_list_items(_normalize_keys(clean_and_parse_json(response.content)))
 
@@ -207,7 +205,7 @@ async def parse_cv_with_ai(cv_text: str) -> dict:
 
         # 4. Niveaux de langue (un niveau absent reste vide)
         return _normalize_language_levels(result)
-            
+
     except Exception as e:
         logger.error(f"❌ Erreur critique lors de l'appel ou du parsing du CV : {e}")
         raise HTTPException(status_code=500, detail=f"Erreur d'analyse du CV : {str(e)}")
@@ -222,7 +220,7 @@ def clean_and_parse_json(raw_content: str) -> dict:
 
     # Enlever les commentaires de type // s'ils existent
     text_clean = re.sub(r'(?<!:)\/\/.*$', '', raw_content, flags=re.MULTILINE)
-    
+
     # Extraire le bloc JSON des backticks markdown si présent
     match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text_clean, re.IGNORECASE)
     if match:
@@ -273,7 +271,7 @@ async def parse_linkedin_with_ai(url: str = None, raw_text: str = None) -> dict:
             raise HTTPException(status_code=400, detail="Veuillez fournir une URL LinkedIn ou le texte brut du profil.")
 
         logger.info(f"Importing LinkedIn profile from URL: {url}")
-        
+
         # 1. Extract name from URL
         name = ""
         match = re.search(r"linkedin\.com/in/([^/\?#]+)", url, re.IGNORECASE)
@@ -326,13 +324,13 @@ Retourne un JSON valide respectant le schéma ResumeParsedSchema.
         chain = prompt | llm
         response = await chain.ainvoke({})
         parsed_data = clean_and_parse_json(response.content)
-        
+
         # Merge mandatory info
         if "personal" not in parsed_data: parsed_data["personal"] = {}
         parsed_data["personal"]["prenom"] = parsed_data["personal"].get("prenom") or prenom
         parsed_data["personal"]["nom"] = parsed_data["personal"].get("nom") or nom
         parsed_data["personal"]["linkedinUrl"] = url
-        
+
         # Validation Pydantic
         try:
             return ResumeParsedSchema(**parsed_data).model_dump()

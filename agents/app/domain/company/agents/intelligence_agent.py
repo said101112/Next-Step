@@ -22,10 +22,10 @@ def parse_json_markdown(text: str) -> dict:
     """
     if not text:
         return {}
-    
+
     # Enlever les commentaires de ligne // (non standard JSON) sans détruire les URLs http:// ou https://
     text_clean = re.sub(r'(?<!:)\/\/.*$', '', text, flags=re.MULTILINE)
-    
+
     # Chercher un bloc ```json ... ``` ou ``` ... ```
     match = re.search(r'```(?:json)?\s*([\s\S]*?)\s*```', text_clean, re.IGNORECASE)
     if match:
@@ -38,7 +38,7 @@ def parse_json_markdown(text: str) -> dict:
             json_str = text_clean[start:end+1].strip()
         else:
             json_str = text_clean.strip()
-            
+
     try:
         return json.loads(json_str, strict=False)
     except Exception as e:
@@ -59,22 +59,22 @@ async def researcher_node(state: CompanyState) -> dict:
     company = state.get("company_name")
     job_title = state.get("job_title", "Poste recherché")
     logger.info(f"🔍 Researcher Agent — Deep Research for {company} (Poste: {job_title})")
-    
+
     # ⚡ Lancement des outils spécialisés en arrière-plan dès le début pour optimiser le temps
     logger.info("⚡ Lancement de tous les outils spécialisés en arrière-plan (LinkedIn, Glassdoor, Salaire)...")
     li_task = asyncio.create_task(linkedin_company_search(company))
     gd_task = asyncio.create_task(glassdoor_search(company))
     sal_task = asyncio.create_task(salary_data_search(company, job_title))
-    
+
     # 1. Smart Search (Focalisé uniquement sur la fiche générale / présentation d'entreprise)
     search_query = f"{company} présentation"
     search_results = await smart_search(search_query, must_mention=company)
-    
+
     logger.info(f"📊 Researcher got {len(search_results)} general results from DDG")
-    
+
     urls = []
     scraped_contents = []
-    
+
     if search_results:
         # 2. Sélection des meilleures URLs via LLM pour la présentation générale
         llm = get_llm(agent_name="company")
@@ -82,7 +82,7 @@ async def researcher_node(state: CompanyState) -> dict:
             llm = llm.bind(response_format={"type": "json_object"})
         selector_prompt = ChatPromptTemplate.from_template(_SELECTOR_PROMPT)
         selector_chain = selector_prompt | llm
-        
+
         try:
             response = await selector_chain.ainvoke({
                 "company": company,
@@ -94,7 +94,7 @@ async def researcher_node(state: CompanyState) -> dict:
         except Exception as e:
             logger.error(f"Selection error: {e}")
             urls = [r['url'] for r in search_results[:2]] # Fallback
-            
+
         logger.info(f"🎯 URLs de présentation générale sélectionnées : {urls}")
 
         # 3. Scraping Haute Précision en parallèle pour la présentation générale
@@ -221,9 +221,9 @@ async def analyst_node(state: CompanyState) -> dict:
     company = state.get("company_name")
     job_title = state.get("job_title", "Poste recherché")
     raw_data = state.get("raw_search_results", [])
-    
+
     logger.info(f"🧠 Analyst Agent — Synthesizing intelligence for {company}")
-    
+
     # Formatage des données brutes récoltées pour le prompt (avec nettoyage et troncature)
     formatted_data = []
     for r in raw_data:
@@ -254,7 +254,7 @@ async def analyst_node(state: CompanyState) -> dict:
             formatted_data.append(f"--- SALARIES DATA ---\n{json.dumps(data, indent=2, ensure_ascii=False)}\n")
         else:
             formatted_data.append(f"--- RAW DATA ({dtype}) ---\n{json.dumps(r, indent=2, ensure_ascii=False)}\n")
-            
+
     raw_data_str = "\n".join(formatted_data) if formatted_data else "Aucune donnée collectée."
 
     # No real source: do not ask the LLM (it would answer from memory and invent figures).
@@ -267,22 +267,22 @@ async def analyst_node(state: CompanyState) -> dict:
         llm = llm.bind(response_format={"type": "json_object"})
     analyst_prompt = ChatPromptTemplate.from_template(_ANALYST_PROMPT)
     analyst_chain = analyst_prompt | llm
-    
+
     try:
         response = await analyst_chain.ainvoke({
             "company": company,
             "job_title": job_title,
             "raw_data": raw_data_str
         })
-        
+
         # Décoder de manière très robuste
         synthesis = parse_json_markdown(response.content if hasattr(response, "content") else str(response))
-        
+
         intelligence_report = synthesis.get("intelligence", {})
         # S'assurer que le nom est bien défini
         if "nom" not in intelligence_report or not intelligence_report["nom"]:
             intelligence_report["nom"] = company
-            
+
         # Ratings must be written in the sources; otherwise they are dropped (not invented).
         culture = intelligence_report.get("culture", {})
         if isinstance(culture, dict):
@@ -299,7 +299,7 @@ async def analyst_node(state: CompanyState) -> dict:
         has_salary_source = any(r and r.get("type") == "salaries" and _has_substance(r) for r in raw_data)
         if not has_salary_source:
             intelligence_report["salaries"] = []
-            
+
         # Sécurité : Forcer les actualités en liste de strings
         actualites = intelligence_report.get("actualites", [])
         clean_news = []
@@ -309,7 +309,7 @@ async def analyst_node(state: CompanyState) -> dict:
             else:
                 clean_news.append(str(act))
         intelligence_report["actualites"] = clean_news
-            
+
         # Only a report with real facts counts as data (interview questions alone are generic).
         intelligence_report["data_available"] = report_has_content(intelligence_report)
 

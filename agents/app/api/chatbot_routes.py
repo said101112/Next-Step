@@ -29,7 +29,7 @@ async def health():
 
 # ── Tab 1 : Questions ─────────────────────────────────────────
 #testé
-@router.post("/questions", response_model=QuestionsResponse) 
+@router.post("/questions", response_model=QuestionsResponse)
 async def generate_questions(
     req: QuestionsRequest,
     db: AsyncSession = Depends(get_db),
@@ -165,7 +165,7 @@ async def get_salary(
     req: SalaryRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    
+
     try:
         return await service.get_salary_service(
             mode=req.mode,

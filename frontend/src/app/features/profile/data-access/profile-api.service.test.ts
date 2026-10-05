@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 import { ProfileApiService } from './profile-api.service';
+import { ExperienceDto } from './profile-api.models';
 
 describe('ProfileService', () => {
   let service: ProfileApiService;
@@ -41,7 +42,7 @@ describe('ProfileService', () => {
   });
 
   it('devrait ajouter une expérience via POST', () => {
-    const newExp = { title: 'Développeur' };
+    const newExp: ExperienceDto = { poste: 'Développeur', entreprise: 'NextStep', taches: [] };
     
     service.addExperience(newExp).subscribe((res) => {
       expect(res).toEqual(newExp);

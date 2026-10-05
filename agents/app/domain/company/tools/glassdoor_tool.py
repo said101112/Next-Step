@@ -15,30 +15,30 @@ async def glassdoor_search(company_name: str) -> dict:
         q2 = f"{company_name} Indeed Maroc avis"
         q3 = f"{company_name} Rekrute entreprise"
         q4 = f"{company_name} questions entretien embauche"
-        
+
         # Lancer les recherches en parallèle
         r1, r2, r3, r4 = await asyncio.gather(
-            smart_search(q1, must_mention=company_name), 
-            smart_search(q2, must_mention=company_name), 
+            smart_search(q1, must_mention=company_name),
+            smart_search(q2, must_mention=company_name),
             smart_search(q3, must_mention=company_name),
             smart_search(q4, must_mention=company_name)
         )
         all_results = r1 + r2 + r3 + r4
-        
+
         # Filtrer et dédupliquer les URLs par domaine de confiance
         trusted_domains = ["glassdoor", "indeed", "rekrute", "hellowork", "stagiaires.ma", "linkedin"]
-        
+
         target_urls = []
         for r in all_results:
             url = r["url"].lower()
             if any(domain in url for domain in trusted_domains) and r["url"] not in target_urls:
                 target_urls.append(r["url"])
-                
+
         scraped_contents = []
         # On va scraper les 3 meilleures sources RH trouvées (ex: Glassdoor, Indeed, Rekrute)
         urls_to_scrape = target_urls[:3]
         logger.info(f"🎯 Sources RH identifiées à scraper en parallèle: {urls_to_scrape}")
-        
+
         scraping_tasks = [high_precision_scrape(url) for url in urls_to_scrape]
         if scraping_tasks:
             scraped_results = await asyncio.gather(*scraping_tasks)
@@ -47,13 +47,13 @@ async def glassdoor_search(company_name: str) -> dict:
                     logger.warning(f"⚠️ Scraping bloqué ou vide pour {url}, ignoré.")
                     continue
                 scraped_contents.append(f"--- SOURCE RH: {url} ---\n{content}")
-                
+
         # Combiner les snippets pour un fallback résilient
         all_snippets = []
         for r in all_results[:12]:
             if r.get("snippet"):
                 all_snippets.append(f"[{r['url']}]: {r['snippet']}")
-                
+
         return {
             "type": "glassdoor",  # Garder le type "glassdoor" pour compatibilité du graphe
             "company": company_name,

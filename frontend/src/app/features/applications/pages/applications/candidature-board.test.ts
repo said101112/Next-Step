@@ -55,8 +55,8 @@ describe('candidature board rules', () => {
   it('échappe les guillemets dans le CSV', () => {
     const csv = buildCandidaturesCsv([card({ entreprise: 'Le "Lab"', followUpNeeded: true })]);
     const [header, row] = csv.split('\n');
-    expect(header).toBe('Entreprise,Poste,Canal,Statut,Date,Reponse,Relance');
+    expect(header).toBe('Company,Role,Channel,Status,Date,Response,FollowUp');
     expect(row.startsWith('"Le ""Lab""","Dev","EMAIL","envoye"')).toBe(true);
-    expect(row.endsWith('"Non","Oui"')).toBe(true);
+    expect(row.endsWith('"No","Yes"')).toBe(true);
   });
 });

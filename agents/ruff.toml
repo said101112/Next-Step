@@ -1,0 +1,19 @@
+# =============================================================================
+# agents/ruff.toml
+# Configuration Ruff — règles appliquées par la CI (_ci-agents.yml)
+#
+# E402 : les services domaine ajoutent app/ au sys.path puis importent, l'ordre
+#        des imports est donc volontaire.
+# E701 : les lambdas courts (`field: lambda v: v.x`) sont le style du projet.
+# E741 : `l` est utilisé comme nom de boucle dans quelques parseurs.
+# =============================================================================
+
+line-length = 200
+target-version = "py312"
+
+[lint]
+select = ["E", "W", "F"]
+ignore = ["E501", "E402", "E701", "E741"]
+
+[format]
+quote-style = "double"

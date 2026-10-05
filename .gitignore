@@ -27,6 +27,9 @@ agents/*.pyc
 agents/.venv/
 agents/venv/
 agents/scratch/
+agents/.coverage
+agents/coverage.xml
+agents/.pytest_cache/
 
 # --- Generated artifacts ---
 # Only <slug>.html.png is served; everything else is regenerated or unused

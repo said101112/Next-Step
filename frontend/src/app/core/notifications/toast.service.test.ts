@@ -53,7 +53,7 @@ describe('ToastService', () => {
 
   it('apiError retombe sur un message générique pour un objet sans message exploitable', () => {
     service.apiError({ foo: 'bar' });
-    expect(toast.error).toHaveBeenCalledWith('Une erreur inattendue est survenue.', expect.objectContaining({ duration: 5000 }));
+    expect(toast.error).toHaveBeenCalledWith('An unexpected error occurred.', expect.objectContaining({ duration: 5000 }));
   });
 
   it('dismiss appelle toast.dismiss', () => {

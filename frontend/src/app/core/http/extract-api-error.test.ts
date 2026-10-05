@@ -49,11 +49,11 @@ describe('extractApiError', () => {
     const err = new HttpErrorResponse({ status: 0, statusText: 'Unknown Error' });
     const result = extractApiError(err);
     expect(result.status).toBe(0);
-    expect(result.message).toContain('serveur');
+    expect(result.message).toContain('server');
   });
 
   it('utilise un message générique pour une erreur inconnue', () => {
-    expect(extractApiError(null).message).toBe('Une erreur inattendue est survenue.');
+    expect(extractApiError(null).message).toBe('An unexpected error occurred.');
   });
 
   it('gère une exception native (hors HTTP)', () => {

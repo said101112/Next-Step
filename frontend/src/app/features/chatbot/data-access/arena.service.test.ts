@@ -355,7 +355,7 @@ describe('ArenaService (Chatbot Testing)', () => {
 
       const salaryCtx = { rangeMin: 120000, rangeMax: 185000, currency: 'USD', yourTarget: 155000 };
 
-      service.salaryCoach('How to counter-offer?', 'salary-thread-456', salaryCtx, []).subscribe(res => {
+      service.salaryCoach('How to counter-offer?', 'salary-thread-456', salaryCtx, [], mockArenaConfig).subscribe(res => {
         expect(res.status).toBe('success');
         expect(res.response).toBe('To negotiate, start with your high range.');
       });

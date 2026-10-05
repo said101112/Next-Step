@@ -167,7 +167,7 @@ async def offer_analyzer_node(state: OfferAnalyzerState) -> dict:
     try:
         # Configuration du LLM avec sortie structurée Pydantic (temperature 0.0 pour un score déterministe)
         llm = get_llm(agent_name="offer_analyzer", temperature=0.0).with_structured_output(AnalyzedOffer)
-        
+
         # On peut injecter les erreurs précédentes dans le prompt si c'est un retry
         prev_errors = state.get("errors", [])
         system_msg = SYSTEM_PROMPT
@@ -180,7 +180,7 @@ async def offer_analyzer_node(state: OfferAnalyzerState) -> dict:
             ("system", system_msg),
             ("human", HUMAN_PROMPT),
         ])
-        
+
         chain = prompt | llm
 
         # Invocation
@@ -232,9 +232,9 @@ def offer_validator_node(state: OfferAnalyzerState) -> dict:
     """
     logger.info("🔧 Validation Algorithmique — START")
     data = state.get("analyzed_offer")
-    
+
     # On vide les erreurs précédentes pour ne pas boucler à l'infini sur de vieux logs
-    # Note: Dans LangGraph avec operator.add, on ne peut pas "vider". 
+    # Note: Dans LangGraph avec operator.add, on ne peut pas "vider".
     # On va donc utiliser une logique dans le router basée uniquement sur les erreurs fraîches.
     current_errors = []
 
@@ -296,7 +296,7 @@ def offer_validator_node(state: OfferAnalyzerState) -> dict:
 def offer_analyzer_router(state: OfferAnalyzerState) -> str:
     """
     Routeur — Décide s'il faut recommencer l'analyse ou terminer.
-    Si des erreurs persistent après 3 tentatives, on continue quand même 
+    Si des erreurs persistent après 3 tentatives, on continue quand même
     avec le dernier résultat obtenu.
     """
     count = state.get("iteration_count", 0)
@@ -309,18 +309,18 @@ def offer_analyzer_router(state: OfferAnalyzerState) -> str:
     # If we already have a minimally usable payload, stop retries.
     if has_min_payload:
         return "end"
-    
+
     # On retente uniquement s'il y a des erreurs ET qu'on n'a pas dépassé 3 essais
     if errors and count < 3:
         logger.warning("🔄 Retry demandé (Tentative %d/3). Erreurs: %s", count, errors[-1:])
         return "retry"
-    
+
     # Dans tous les autres cas (succès OU max atteint), on termine
     if errors:
         logger.warning("⚠️ Max iterations atteintes (3/3). On continue avec le dernier résultat malgré les erreurs.")
     else:
         logger.info("✅ Analyse validée avec succès.")
-        
+
     return "end"
 
 

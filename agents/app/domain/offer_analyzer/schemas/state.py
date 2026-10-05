@@ -9,7 +9,7 @@ from langgraph.graph.message import add_messages
 
 class OfferAnalyzerState(TypedDict, total=False):
     """État interne de l'agent offer_analyzer.
-    
+
     Après exécution, cet agent retourne également les champs normalisés
     de l'offre afin d'éviter un nœud normalizer séparé.
     """

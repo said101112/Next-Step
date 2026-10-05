@@ -85,7 +85,7 @@ async def test_run_sn_agent_get_10_candidatures():
             "competences": [], "formations": [], "experiences": [],
             "projets": [], "certifications": [],
         }
-        
+
         res = await run_sn_agent(
             user_id="test-user-123",
             user_message="donner les last candidature 10",

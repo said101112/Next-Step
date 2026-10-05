@@ -5,7 +5,6 @@
 import sys
 import os
 import pytest
-import pytest_asyncio
 
 # ── Ajoute le dossier agents/ au PYTHONPATH ────────────────────
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
@@ -112,12 +111,12 @@ def sample_match_result():
     }
 
 import uuid
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock
 
 from app.domain.chatbot.state import (
-    InterviewPrepState, QuestionItem, FeedbackResult,
+    QuestionItem, FeedbackResult,
     DimensionScore, SalaryResult, OfferContext,
-    OfferData, CompanyData, MatchData, ArenaConfig,
+    OfferData, CompanyData, MatchData,
 )
 from app.domain.chatbot.schemas import ArenaConfigSchema, MessageSchema
 

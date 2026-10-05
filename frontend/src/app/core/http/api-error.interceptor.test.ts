@@ -60,7 +60,7 @@ describe('apiErrorInterceptor', () => {
     const errorSpy = vi.spyOn(toast, 'error');
     http.get('/api/test').subscribe({ error: () => {} });
     httpMock.expectOne('/api/test').error(new ProgressEvent('network'));
-    expect(errorSpy).toHaveBeenCalledWith('Impossible de joindre le serveur. Vérifiez votre connexion.');
+    expect(errorSpy).toHaveBeenCalledWith('Unable to reach the server. Please check your connection.');
   });
 
   it('ré-émet l erreur HTTP telle quelle (pas de transformation)', () => {

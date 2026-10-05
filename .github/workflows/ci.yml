@@ -1,21 +1,21 @@
 # =============================================================================
 # .github/workflows/ci.yml
-# NextStep — Pipeline CI GitHub Actions
+# NextStep — Pipeline CI (orchestrateur)
 #
-# Déclencheurs :
-#   push  → branches : main, dev, zakariae, feature-*
-#   PR    → vers main et dev
+# Ce fichier ne fait qu'ordonner les jobs. Chaque composant a son propre
+# workflow réutilisable dans ce dossier :
 #
-# Jobs parallèles :
-#   ┌──────────────┐  ┌────────────────┐  ┌──────────────────┐
-#   │  ci-agents   │  │  ci-frontend   │  │   ci-backend     │
-#   │  (Python)    │  │  (Angular)     │  │   (.NET)         │
-#   └──────┬───────┘  └───────┬────────┘  └────────┬─────────┘
-#          └──────────────────┼───────────────────-─┘
-#                             ▼
-#                    ┌─────────────────┐
-#                    │   ci-summary    │  (badge + résumé)
-#                    └─────────────────┘
+#   _ci-agents.yml    → ruff + pytest + couverture Codecov
+#   _ci-frontend.yml  → tsc + Vitest + build Angular
+#   _ci-backend.yml   → build .NET + tests xUnit
+#   _ci-docker.yml    → validation docker compose + build des 3 images
+#   _ci-sonar.yml     → SonarQube (ignoré si non configuré)
+#
+# Pour ajouter un composant : créer son _ci-<nom>.yml avec `on: workflow_call`
+# puis l'ajouter dans la liste `jobs:` ci-dessous et dans le tableau du résumé.
+#
+# Les déploiements (deploy-ec2.yml, deploy-fargate.yml) sont déclenchés par le
+# CD, pas par ce fichier.
 # =============================================================================
 
 name: CI — NextStep
@@ -27,263 +27,105 @@ on:
       - dev
       - "feature-*"
       - "fix/*"
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
   pull_request:
     branches:
       - main
       - dev
+    paths-ignore:
+      - "**/*.md"
+      - "docs/**"
+      - ".github/ISSUE_TEMPLATE/**"
+  workflow_dispatch:
 
-# Annule les runs en cours sur la même branche si un nouveau push arrive
+permissions:
+  contents: read
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
-# ─────────────────────────────────────────────────────────────────────────────
-# VARIABLES GLOBALES
-# ─────────────────────────────────────────────────────────────────────────────
-env:
-  PYTHON_VERSION: "3.12"
-  NODE_VERSION: "22"
-  DOTNET_VERSION: "9.0"
-
-# =============================================================================
-# JOB 1 — Agents Python (pytest + lint)
-# =============================================================================
 jobs:
-  ci-agents:
+  agents:
     name: "🐍 Agents Python"
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    defaults:
-      run:
-        working-directory: agents
+    uses: ./.github/workflows/_ci-agents.yml
 
-    steps:
-      # ── Checkout ────────────────────────────────────────────
-      - name: "📥 Checkout"
-        uses: actions/checkout@v4
-
-      # ── Python ──────────────────────────────────────────────
-      - name: "🐍 Setup Python ${{ env.PYTHON_VERSION }}"
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-          cache: "pip"
-          cache-dependency-path: agents/requirements.txt
-
-      # ── Dépendances ─────────────────────────────────────────
-      - name: "📦 Installer les dépendances"
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install pytest pytest-asyncio httpx
-
-      # ── Lint (Ruff) ─────────────────────────────────────────
-      - name: "🔍 Lint — Ruff"
-        run: |
-          pip install ruff
-          ruff check app/ --select E,W,F --ignore E501 || true
-
-      # ── Vérification des imports ─────────────────────────────
-      - name: "✅ Vérifier les imports critiques"
-        run: |
-          python -c "
-          from app.domain.offer_analyzer.schemas.state import OfferAnalyzerState
-          from app.domain.offer_analyzer.agents.agent import offer_analyzer_node
-          from app.domain.profile_retriever.service import ProfileRetrieverService
-          from app.domain.pipeline.workflow import build_offer_pipeline
-          from app.core.utils.normalizer import normalize_skills
-
-          # Vérification de la création du graphe (Architecture Service-Based)
-          g = build_offer_pipeline()
-          print('✅ Architecture Domain-Driven (Service-Based) OK')
-          "
-
-      # ── Tests unitaires ─────────────────────────────────────
-      - name: "🧪 Suite de tests — Agents Python"
-        env:
-          LLM_PROVIDER: "groq"
-          GROQ_API_KEY: "test-key-not-real"
-          DATABASE_URL: "postgresql+asyncpg://test:test@localhost:5432/test_db"
-        run: python -m pytest tests -v --tb=short
-
-      # ── Rapport de couverture ────────────────────────────────
-      - name: "📊 Coverage report"
-        run: |
-          pip install pytest-cov
-          python -m pytest tests --cov=app --cov-report=term-missing --cov-report=xml -q
-        continue-on-error: true
-
-      - name: "📤 Upload coverage to Codecov"
-        uses: codecov/codecov-action@v4
-        with:
-          file: agents/coverage.xml
-          flags: agents
-          fail_ci_if_error: false
-        continue-on-error: true
-
-# =============================================================================
-# JOB 2 — Frontend Angular (build + tests Vitest)
-# =============================================================================
-  ci-frontend:
+  frontend:
     name: "🅰️ Frontend Angular"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: frontend
+    uses: ./.github/workflows/_ci-frontend.yml
 
-    steps:
-      - name: "📥 Checkout"
-        uses: actions/checkout@v4
-
-      - name: "🟢 Setup Node.js ${{ env.NODE_VERSION }}"
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
-
-      - name: "📦 npm install"
-        run: npm ci --prefer-offline
-
-      # ── Lint TypeScript ──────────────────────────────────────
-      - name: "🔍 TypeScript — vérification des types"
-        run: npx tsc --noEmit --skipLibCheck
-        continue-on-error: true
-
-      # ── Tests Vitest ─────────────────────────────────────────
-      - name: "🧪 Tests Vitest"
-        run: npm test -- --run --reporter=verbose
-        continue-on-error: true
-
-      # ── Build de production ──────────────────────────────────
-      - name: "🏗️ Build Angular (production)"
-        run: npm run build -- --configuration=production
-        env:
-          NODE_OPTIONS: "--max-old-space-size=4096"
-
-      - name: "📤 Upload build artifacts"
-        uses: actions/upload-artifact@v4
-        with:
-          name: frontend-dist
-          path: frontend/dist/
-          retention-days: 3
-
-# =============================================================================
-# JOB 3 — Backend .NET (build + tests)
-# =============================================================================
-  ci-backend:
+  backend:
     name: "🔷 Backend .NET"
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: backend
+    uses: ./.github/workflows/_ci-backend.yml
 
-    steps:
-      - name: "📥 Checkout"
-        uses: actions/checkout@v4
+  docker:
+    name: "🐳 Docker Compose"
+    uses: ./.github/workflows/_ci-docker.yml
 
-      - name: "🔷 Setup .NET ${{ env.DOTNET_VERSION }}"
-        uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: ${{ env.DOTNET_VERSION }}
-
-      - name: "📦 Restaurer les dépendances NuGet"
-        run: dotnet restore
-
-      - name: "🔨 Build .NET"
-        run: dotnet build --no-restore --configuration Release
-
-      - name: "🧪 Tests .NET"
-        run: |
-          dotnet test --no-build --configuration Release \
-            --verbosity normal \
-            --logger "trx;LogFileName=test-results.trx" \
-            --results-directory ./TestResults
-        continue-on-error: true
-
-      - name: "📤 Upload test results"
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: dotnet-test-results
-          path: backend/TestResults/*.trx
-          retention-days: 3
-
-# =============================================================================
-# JOB 4 — Validation Docker Compose (structure)
-# =============================================================================
-  ci-docker:
-    name: "🐳 Docker Compose — Validation"
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: "📥 Checkout"
-        uses: actions/checkout@v4
-
-      - name: "🐳 Validate docker compose files (dev + prod)"
-        run: |
-          cp .env.example .env
-          docker compose -f docker-compose.yml -f docker-compose.dev.yml config --quiet
-          docker compose -f docker-compose.yml -f docker-compose.prod.yml config --quiet
-          echo "✅ docker compose dev/prod valides"
-
-      - name: "🐳 Build image agents (sans démarrage)"
-        run: |
-          docker build agents/ -t nextstep-agents:ci --quiet
-          echo "✅ Image agents construite"
-        continue-on-error: true
-
-# =============================================================================
-# JOB 5 — Résumé final (dépend de tous les autres)
-# =============================================================================
-  ci-summary:
+  # ───────────────────────────────────────────────────────────────────────────
+  # RÉSUMÉ — point de contrôle unique required dans les règles de branche.
+  # Échoue si un seul composant a échoué (les jobs "skipped" ne bloquent pas).
+  # ───────────────────────────────────────────────────────────────────────────
+  summary:
     name: "📋 CI Summary"
     runs-on: ubuntu-latest
-    needs: [ci-agents, ci-frontend, ci-backend, ci-docker]
+    timeout-minutes: 10
+    needs: [agents, frontend, backend, docker]
     if: always()
+    permissions:
+      contents: read
 
     steps:
-      - name: "📋 Résumé des résultats"
+      - name: "📋 Rapport"
+        env:
+          R_AGENTS: ${{ needs.agents.result }}
+          R_FRONTEND: ${{ needs.frontend.result }}
+          R_BACKEND: ${{ needs.backend.result }}
+          R_DOCKER: ${{ needs.docker.result }}
         run: |
-          echo "## 📊 Résultats CI NextStep" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "| Composant | Statut |" >> $GITHUB_STEP_SUMMARY
-          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
-          echo "| 🐍 Agents Python | ${{ needs.ci-agents.result == 'success' && '✅ Succès' || '❌ Échec' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🅰️ Frontend Angular | ${{ needs.ci-frontend.result == 'success' && '✅ Succès' || '❌ Échec' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🔷 Backend .NET | ${{ needs.ci-backend.result == 'success' && '✅ Succès' || '❌ Échec' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "| 🐳 Docker | ${{ needs.ci-docker.result == 'success' && '✅ Succès' || '❌ Échec' }} |" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "**Branche :** \`${{ github.ref_name }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Commit :** \`${{ github.sha }}\`" >> $GITHUB_STEP_SUMMARY
-          echo "**Déclenché par :** @${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          status() {
+            case "$1" in
+              success) echo "✅ Succès" ;;
+              skipped) echo "⏭️ Ignoré" ;;
+              *)       echo "❌ Échec" ;;
+            esac
+          }
 
-      - name: ❌ Échouer si les agents Python échouent
-        if: needs.ci-agents.result == 'failure'
+          {
+            echo "## 📊 Résultats CI NextStep"
+            echo ""
+            echo "| Composant | Statut |"
+            echo "|-----------|--------|"
+            echo "| 🐍 Agents Python   | $(status "$R_AGENTS")   |"
+            echo "| 🅰️ Frontend Angular | $(status "$R_FRONTEND") |"
+            echo "| 🔷 Backend .NET     | $(status "$R_BACKEND")   |"
+            echo "| 🐳 Docker Compose   | $(status "$R_DOCKER")    |"
+            echo ""
+            echo "**Branche :** \`${{ github.ref_name }}\`"
+            echo "**Commit :** \`${{ github.sha }}\`"
+            echo "**Déclenché par :** @${{ github.actor }}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: "❌ Échouer si un composant est en échec"
+        if: >-
+          needs.agents.result == 'failure' ||
+          needs.frontend.result == 'failure' ||
+          needs.backend.result == 'failure' ||
+          needs.docker.result == 'failure'
         run: |
-          echo "❌ Les tests Python ont échoué — voir les logs ci-dessus"
+          echo "::error::Un ou plusieurs composants CI ont échoué."
           exit 1
 
-# =============================================================================
-# JOB 6 — SonarQube Analysis (Professional Integrated Stage)
-# =============================================================================
-  sonarqube-analysis:
-    name: "🔍 SonarQube Analysis"
-    runs-on: ubuntu-latest
-    needs: [ci-agents, ci-frontend, ci-backend]
+  # Analyse SonarQube — ignorée tant qu'aucune instance n'est configurée.
+  sonar:
+    name: "🔍 SonarQube"
+    needs: [agents, frontend, backend]
     if: >-
       always() &&
-      (needs.ci-agents.result == 'success' || needs.ci-frontend.result == 'success' || needs.ci-backend.result == 'success') &&
-      vars.SONAR_HOST_URL != ''
-    steps:
-      - name: "📥 Checkout"
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: "🔍 SonarQube Scan"
-        uses: SonarSource/sonarqube-scan-action@v3
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+      (needs.agents.result == 'success' ||
+       needs.frontend.result == 'success' ||
+       needs.backend.result == 'success')
+    uses: ./.github/workflows/_ci-sonar.yml

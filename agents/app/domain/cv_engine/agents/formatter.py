@@ -320,7 +320,7 @@ def build_questpdf_payload(
     quest_projects: List[QuestPDFProject] = []
     opt_projects = optimized_cv.get("projets_optimises", [])
     original_projs = original_profile.get("projets", [])
-    
+
     scored_projects = []
     used_projs: set = set()
 
@@ -353,7 +353,7 @@ def build_questpdf_payload(
             description=description,
             bullets=bullets,
         )))
-        
+
     # Sort projects by match score descending
     scored_projects.sort(key=lambda x: (x[0], x[1]), reverse=True)
     quest_projects = [p[2] for p in scored_projects[:4]]
@@ -401,19 +401,19 @@ def build_questpdf_payload(
         if str(s or "").strip()
     }
     opt_skills = optimized_cv.get("competences_reordonnees", [])
-    
+
     seen: set = set()
     highlighted_skills_list: List[QuestPDFSkill] = []
     matched_skills_list: List[QuestPDFSkill] = []
     other_skills_list: List[QuestPDFSkill] = []
-    
+
     for skill_name in opt_skills:
         key = skill_name.lower().strip()
         # Skip duplicates or if it's already considered a language
         if key in seen or key in lang_names:
             continue
         seen.add(key)
-        
+
         skill_key = canonical_skill(skill_name)
         is_matched = skill_key in matched_set
         skill_obj = QuestPDFSkill(
@@ -427,7 +427,7 @@ def build_questpdf_payload(
             matched_skills_list.append(skill_obj)
         else:
             other_skills_list.append(skill_obj)
-            
+
     # Algorithms: highlighted skills first, then matched, then others
     quest_skills = highlighted_skills_list + matched_skills_list + other_skills_list
 
@@ -470,7 +470,7 @@ def build_questpdf_payload(
                 end=exp.get("date_fin"),
             ))
             seen_activity_keys.add(akey)
-            
+
     # Extract from projets (legacy or alternative mapping)
     for proj in original_profile.get("projets", []):
         if proj.get("categorie") == "association" or proj.get("type") == "extracurricular":

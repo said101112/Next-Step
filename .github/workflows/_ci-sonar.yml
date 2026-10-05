@@ -1,0 +1,36 @@
+# =============================================================================
+# .github/workflows/_ci-sonar.yml
+# Job réutilisable — SonarQube (optionnel)
+#
+# Appelé par ci.yml. Ne se déclenche pas directement.
+# Ne s'exécute que si une instance Sonar est configurée via les variables
+# SONAR_HOST_URL / SONAR_TOKEN. Sans elles, le job est ignoré au lieu de faire
+# échouer le pipeline.
+# =============================================================================
+
+name: ci-sonar
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  sonarqube-analysis:
+    name: "🔍 SonarQube Analysis"
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    if: vars.SONAR_HOST_URL != ''
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: "🔍 SonarQube Scan"
+        uses: SonarSource/sonarqube-scan-action@v3
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: ${{ vars.SONAR_HOST_URL }}

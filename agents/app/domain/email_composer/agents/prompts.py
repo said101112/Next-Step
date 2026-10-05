@@ -45,13 +45,13 @@ ATTENTION : Les clés DOIVENT être exactement : "subject", "body", "language", 
 
 - EXEMPLE DE STRUCTURE DU CORPS (Sauts de ligne doubles obligatoires) :
   Bonjour,
-  
+
   [Paragraphe 1 : Introduction et poste]
-  
+
   [Paragraphe 2 : Parcours et compétences clés]
-  
+
   [Paragraphe 3 : Motivation et entreprise]
-  
+
   Cordialement,
   [Signature]
 

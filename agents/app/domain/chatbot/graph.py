@@ -23,7 +23,6 @@ CHAQUE NOEUD :
 import uuid
 import json
 import logging
-from typing import Literal
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from langgraph.graph import StateGraph, START, END
 
@@ -215,7 +214,7 @@ async def free_chat_node(state: InterviewPrepState) -> dict:
             db_max = c.salary_max
             db_target = int(c.salary_min + (c.salary_max - c.salary_min) * 0.8) if c.salary_max > c.salary_min else c.salary_min
             currency = c.currency if c.currency else "MAD"
-            
+
             # Détection et normalisation robuste du type de contrat stage/PFE/PFA
             raw_contract = (o.contract_type or "").lower()
             title_lower = (o.job_title or "").lower()
@@ -230,7 +229,7 @@ async def free_chat_node(state: InterviewPrepState) -> dict:
             level_name  = cfg.level.capitalize() if cfg else ""
             job_title = f"{level_name} {domain_name} Engineer" if "Engineer" not in domain_name else f"{level_name} {domain_name}"
             location  = "Morocco"
-            
+
             # Détection et normalisation robuste du type de contrat stage/PFE/PFA
             title_lower = job_title.lower()
             if "stage" in title_lower or "pfe" in title_lower or "pfa" in title_lower or "intern" in title_lower or "stagiaire" in title_lower:
@@ -471,7 +470,7 @@ async def salary_node(state: InterviewPrepState) -> dict:
         db_max = c.salary_max
         db_target = int(c.salary_min + (c.salary_max - c.salary_min) * 0.8) if c.salary_max > c.salary_min else c.salary_min
         currency = c.currency if c.currency else "USD"
-        
+
         # Détection et normalisation robuste du type de contrat stage/PFE/PFA
         raw_contract = (o.contract_type or "").lower()
         title_lower = (o.job_title or "").lower()

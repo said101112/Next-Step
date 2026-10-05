@@ -1,0 +1,59 @@
+# =============================================================================
+# .github/workflows/_ci-backend.yml
+# Job réutilisable — Backend .NET (build + tests xUnit)
+#
+# Appelé par ci.yml. Ne se déclenche pas directement.
+# =============================================================================
+
+name: ci-backend
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  DOTNET_VERSION: "9.0"
+
+defaults:
+  run:
+    working-directory: backend
+
+jobs:
+  ci-backend:
+    name: "🔷 Backend .NET"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v4
+
+      - name: "🔷 Setup .NET ${{ env.DOTNET_VERSION }}"
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+          cache: true
+          cache-dependency-path: backend/**/*.csproj
+
+      - name: "📦 Restaurer les dépendances NuGet"
+        run: dotnet restore
+
+      - name: "🔨 Build .NET"
+        run: dotnet build --no-restore --configuration Release
+
+      - name: "🧪 Tests .NET"
+        run: |
+          dotnet test --no-build --configuration Release \
+            --verbosity normal \
+            --logger "trx;LogFileName=test-results.trx" \
+            --results-directory ./TestResults
+
+      - name: "📤 Upload test results"
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: dotnet-test-results
+          path: backend/TestResults/*.trx
+          retention-days: 3

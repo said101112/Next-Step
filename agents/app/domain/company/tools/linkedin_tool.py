@@ -23,5 +23,5 @@ async def linkedin_company_search(company_name: str) -> dict:
                 return {"type": "linkedin", "company": company_name, "url": url}
     except Exception as e:
         logger.error(f"❌ Erreur recherche LinkedIn : {e}")
-        
+
     return {"type": "linkedin", "company": company_name, "url": f"https://www.linkedin.com/company/{company_name.lower().replace(' ', '-')}"}

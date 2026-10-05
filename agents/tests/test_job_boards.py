@@ -1,6 +1,5 @@
 """Job-board scraping: shared helpers, LinkedIn URL/filters, the search flow (no network)."""
 import asyncio
-from unittest.mock import patch
 
 import pytest
 

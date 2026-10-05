@@ -29,7 +29,7 @@ class CompanyState(TypedDict, total=False):
     # ── Entrées ───────────────────────────────────────────────
     company_name: str
     """Nom de l'entreprise cible."""
-    
+
     job_title: str
     """Intitulé du poste pour la recherche de salaires."""
 

@@ -437,7 +437,7 @@ describe('ProfileFeatureService (State & Signals)', () => {
 
     const exportResult = service.exportProfileJson();
     expect(exportResult).toBeDefined();
-    expect(exportResult.filename).toContain('profil_jane_doe_');
+    expect(exportResult.filename).toContain('profile_jane_doe_');
     expect(exportResult.filename).toMatch(/\.json$/);
 
     const parsed = JSON.parse(exportResult.jsonContent);

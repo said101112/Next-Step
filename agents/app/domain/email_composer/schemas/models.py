@@ -13,7 +13,7 @@ from pydantic import BaseModel, Field, AliasChoices, ConfigDict, field_validator
 
 # ── Candidate & Offer inputs ──────────────────────────────────────────────────
 
-from typing import List, Optional, Dict, Any, Union, Literal
+from typing import Union, Literal
 
 class CandidateInput(BaseModel):
     full_name: str

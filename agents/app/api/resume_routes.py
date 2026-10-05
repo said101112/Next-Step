@@ -30,7 +30,7 @@ async def parse_resume(file: UploadFile = File(...)):
 
         return parsed_json
 
-    except Exception as e:
+    except Exception:
         logger.exception("Error parsing resume")
         raise HTTPException(status_code=500, detail="Erreur lors de l'analyse du CV.")
 
@@ -39,7 +39,7 @@ async def parse_linkedin_route(payload: LinkedInRequest):
     try:
         parsed_json = await parse_linkedin_with_ai(url=payload.url, raw_text=payload.rawText)
         return parsed_json
-    except Exception as e:
+    except Exception:
         logger.exception("Error parsing LinkedIn payload")
         raise HTTPException(status_code=500, detail="Erreur lors de l'import LinkedIn.")
 

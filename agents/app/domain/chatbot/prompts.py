@@ -78,7 +78,7 @@ EVALUATION CRITERIA:
 5. Confidence: Ability to think critically vs. relying on generic or memorized answers.
 
 SCORING RULES:
-- global_score: A total performance score from 0 to 100. 
+- global_score: A total performance score from 0 to 100.
 - dimensions: Individual scores from 0 to 10 for each criteria mentioned above.
 - Return the evaluation in the same language as the transcript.
 

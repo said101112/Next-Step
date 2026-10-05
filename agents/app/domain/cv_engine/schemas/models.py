@@ -61,11 +61,11 @@ class QuestPDFCvData(CamelCaseBaseModel):
     certifications: List[str] = []
     languages: List[str] = []
     activities: List[QuestPDFActivity] = []
-    
+
     # Customization
     theme_color: Optional[str] = None
     font_family: Optional[str] = None
-    
+
     # AI Metadata
     ats_score: int = 0
     matching_score: int = 0

@@ -86,32 +86,32 @@ describe('AutocompleteService', () => {
       expect(results).toEqual([]);
     });
 
-    it('finds job titles matching alias "dev"', () => {
-      const results = service.searchJobTitles('dev');
+    it('finds job titles matching alias "fs"', () => {
+      const results = service.searchJobTitles('fs');
       expect(results.length).toBeGreaterThan(0);
-      const hasFullstack = results.some((r) => r.title.includes('Full Stack'));
-      expect(hasFullstack).toBe(true);
-      expect(results[0].category).toBeDefined();
+      const fullstack = results.find((r) => r.title === 'Full Stack Developer');
+      expect(fullstack).toBeDefined();
+      expect(fullstack?.category).toBe('Engineering & Dev');
     });
 
     it('handles accent-insensitive queries like "developpeur"', () => {
       const results = service.searchJobTitles('developpeur');
       expect(results.length).toBeGreaterThan(0);
-      expect(results.some((r) => r.title.startsWith('Développeur'))).toBe(true);
+      expect(results.some((r) => r.title.includes('Developer'))).toBe(true);
     });
 
-    it('matches "data" roles with category Data & IA', () => {
+    it('matches "data" roles with category Data & AI', () => {
       const results = service.searchJobTitles('data');
       expect(results.length).toBeGreaterThan(0);
       const ds = results.find((r) => r.title === 'Data Scientist');
       expect(ds).toBeDefined();
-      expect(ds?.category).toBe('Data & IA');
+      expect(ds?.category).toBe('Data & AI');
     });
 
     it('prioritizes historical roles with alreadyApplied flag', () => {
-      const results = service.searchJobTitles('dev', ['Développeur C# Senior']);
+      const results = service.searchJobTitles('dev', ['Senior .NET Developer']);
       expect(results.length).toBeGreaterThan(0);
-      const histRole = results.find((r) => r.title === 'Développeur C# Senior');
+      const histRole = results.find((r) => r.title === 'Senior .NET Developer');
       expect(histRole).toBeDefined();
       expect(histRole?.alreadyApplied).toBe(true);
     });

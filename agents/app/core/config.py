@@ -45,12 +45,12 @@ _PROVIDER_COOLDOWNS: Dict[str, float] = {}
 
 class Settings(BaseSettings):
     """Configuration de l'application via variables d'environnement."""
-    
+
     # --- Infrastructure & Database ---
     # Set by docker-compose from .env; no credentials in code.
     DATABASE_URL: str = "postgresql+asyncpg://postgres@localhost:5432/nextstep_db"
     DOTNET_BACKEND_URL: str = "http://localhost:5000"
-    
+
     # --- LLM Core Settings ---
     LLM_PROVIDER_PRIORITY: str = "groq,openai,gemini"
     LLM_PRIORITY_CV_OPTIMIZER: str = "groq,openai,gemini"
@@ -137,7 +137,7 @@ def _resolve_model(provider: str, agent_name: Optional[str] = None) -> str:
         if agent_name == "cv_optimizer" and settings.OPENAI_MODEL_CV_OPTIMIZER:
             return settings.OPENAI_MODEL_CV_OPTIMIZER
         return settings.OPENAI_MODEL
-    
+
     return ""
 
 def _create_provider_llm(
@@ -397,7 +397,7 @@ class _LLMProvider(Runnable):
         """Détermine la liste des providers à essayer pour cet agent."""
         if self._agent_name == "cv_optimizer" and settings.LLM_PRIORITY_CV_OPTIMIZER:
             return [p.strip() for p in settings.LLM_PRIORITY_CV_OPTIMIZER.split(",") if p.strip()]
-        
+
         return [p.strip() for p in settings.LLM_PROVIDER_PRIORITY.split(",") if p.strip()]
 
     def invoke(self, input, config=None, **kwargs):

@@ -5,7 +5,7 @@
 # Endpoint: POST /api/agents/sn/chat
 # ============================================================
 import logging
-from typing import Any, Dict, List, Optional
+from typing import Dict, List, Optional
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, Field
 

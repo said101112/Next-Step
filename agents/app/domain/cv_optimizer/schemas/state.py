@@ -13,9 +13,9 @@ class CVOptimizerState(TypedDict, total=False):
     """Output language for the rewritten CV text: "en" (default) or "fr"."""
     skill_gap_analysis: Optional[dict]
     match_result: Optional[dict]
-    
+
     optimized_cv: Optional[dict]
-    
+
     messages: Annotated[list[BaseMessage], add_messages]
     errors: Annotated[list[str], operator.add]
     iteration_count: int

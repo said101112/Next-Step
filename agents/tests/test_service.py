@@ -21,7 +21,6 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from app.domain.chatbot import service
 from app.domain.chatbot.schemas import (
-    ArenaConfigSchema, MessageSchema,
     QuestionsResponse, FreeChatResponse,
     StartInterviewResponse, SendMessageResponse,
     EndInterviewResponse, SalaryResponse,

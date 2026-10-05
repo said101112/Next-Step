@@ -1,0 +1,59 @@
+# =============================================================================
+# .github/workflows/_ci-frontend.yml
+# Job réutilisable — Frontend Angular (types + tests Vitest + build prod)
+#
+# Appelé par ci.yml. Ne se déclenche pas directement.
+# =============================================================================
+
+name: ci-frontend
+
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+env:
+  NODE_VERSION: "22"
+
+defaults:
+  run:
+    working-directory: frontend
+
+jobs:
+  ci-frontend:
+    name: "🅰️ Frontend Angular"
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    steps:
+      - name: "📥 Checkout"
+        uses: actions/checkout@v4
+
+      - name: "🟢 Setup Node.js ${{ env.NODE_VERSION }}"
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: "📦 Installer les dépendances"
+        run: npm ci --prefer-offline --no-audit --no-fund
+
+      - name: "🔍 TypeScript — vérification des types"
+        run: npx tsc --noEmit -p tsconfig.spec.json
+
+      - name: "🧪 Tests Vitest"
+        run: npm test -- --run --reporter=dot
+
+      - name: "🏗️ Build Angular (production)"
+        run: npm run build -- --configuration=production
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+
+      - name: "📤 Upload build artifacts"
+        uses: actions/upload-artifact@v4
+        with:
+          name: frontend-dist
+          path: frontend/dist/
+          retention-days: 3

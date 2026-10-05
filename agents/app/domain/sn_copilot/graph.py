@@ -16,7 +16,6 @@ from app.core.config import get_llm
 from app.domain.sn_copilot.tools import (
     get_recent_candidatures,
     update_candidature_status,
-    add_candidature_note,
     create_candidature,
     get_candidature_stats,
     get_pending_follow_ups,
@@ -204,7 +203,7 @@ def _detect_intent(user_text: str) -> Dict[str, Any]:
     # 6. Candidatures list / check / pipeline
     has_cand_noun = any(w in t for w in ["candidature", "candidatures", "postulé", "postulée", "postulee", "pipeline", "dossier", "opportunité", "opportunités"])
     has_retrieval_trigger = any(v in t for v in [
-        "affiche", "afficher", "donne", "donner", "liste", "lister", "voir", "montre", "montrer", 
+        "affiche", "afficher", "donne", "donner", "liste", "lister", "voir", "montre", "montrer",
         "consulter", "mes", "combien", "derniere", "dernière", "dernier", "derniers", "recent", "récent",
         "recupere", "récupère", "last", "etat", "état", "où en sont", "ou en sont"
     ])
@@ -454,8 +453,8 @@ async def run_sn_agent(
             )
         elif cr.get("status") == "ready_to_add":
             extra_context = (
-                f"\n\nDEMANDE D'ENREGISTREMENT DE CANDIDATURE :\n"
-                f"Demande poliment à l'utilisateur de préciser le nom de l'entreprise et l'intitulé du poste."
+                "\n\nDEMANDE D'ENREGISTREMENT DE CANDIDATURE :\n"
+                "Demande poliment à l'utilisateur de préciser le nom de l'entreprise et l'intitulé du poste."
             )
         else:
             extra_context = f"\n\nERREUR CRÉATION CANDIDATURE : {cr.get('message')}"
@@ -634,14 +633,14 @@ CONSIGNES STRICTES DE RÉDACTION (STYLE BCG EXECUTIVE BRIEFING) :
                 "Mes compétences clés"
             ]
         elif intent == "cv_analysis":
-            markdown_output = f"J'ai bien reçu votre CV. Malheureusement, je n'ai pas pu l'analyser en détail pour le moment. Réessayez en collant le texte de votre CV."
+            markdown_output = "J'ai bien reçu votre CV. Malheureusement, je n'ai pas pu l'analyser en détail pour le moment. Réessayez en collant le texte de votre CV."
             suggestions = [
                 "Résumer mon profil",
                 "Afficher mes candidatures",
                 "Matcher CV et candidatures"
             ]
         elif intent == "cv_matching":
-            markdown_output = f"L'analyse de compatibilité n'a pas pu être effectuée. Vérifiez que votre profil est à jour."
+            markdown_output = "L'analyse de compatibilité n'a pas pu être effectuée. Vérifiez que votre profil est à jour."
             suggestions = [
                 "Résumer mon profil",
                 "Afficher mes candidatures",
