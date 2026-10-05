@@ -18,18 +18,18 @@ permissions:
 
 jobs:
   sonarqube-analysis:
-    name: "🔍 SonarQube Analysis"
+    name: SonarQube Analysis
     runs-on: ubuntu-latest
     timeout-minutes: 15
     if: vars.SONAR_HOST_URL != ''
 
     steps:
-      - name: "📥 Checkout"
+      - name: Checkout
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: "🔍 SonarQube Scan"
+      - name: SonarQube Scan
         uses: SonarSource/sonarqube-scan-action@v3
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}

@@ -1,4 +1,4 @@
-name: Deploy — Enterprise Fargate (Manual Trigger Only)
+name: Deploy - Enterprise Fargate (Manual Trigger Only)
 
 on:
   # push:
@@ -36,26 +36,26 @@ jobs:
   # Triggered automatically on push to 'dev' / 'staging', or manually
   # =========================================================================
   deploy-staging:
-    name: 🚀 Deploy — Staging
+    name: Deploy - Staging
     runs-on: ubuntu-latest
     if: github.event.inputs.environment == 'staging'
     environment: staging
 
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔑 Configure AWS Credentials (OIDC)
+      - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_FARGATE_STAGING_ROLE_ARN || vars.AWS_FARGATE_ROLE_ARN || vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
-      - name: 🔐 Log in to Amazon ECR
+      - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 🐳 Build & Push Docker Images to ECR (Staging)
+      - name: Build and Push Docker Images to ECR (Staging)
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           PROJECT: nextstep/staging
@@ -76,7 +76,7 @@ jobs:
           docker push $REGISTRY/$PROJECT/nginx:$IMAGE_TAG
           docker push $REGISTRY/$PROJECT/nginx:latest
 
-      - name: 🔄 Update ECS Staging Service
+      - name: Update ECS Staging Service
         run: |
           echo "Triggering rolling update on ECS Staging Service..."
           aws ecs update-service \
@@ -84,39 +84,39 @@ jobs:
             --service nextstep-staging-service \
             --force-new-deployment
 
-      - name: ⏳ Wait for Staging Stability
+      - name: Wait for Staging Stability
         run: |
           echo "Waiting for Staging tasks to stabilize..."
           aws ecs wait services-stable \
             --cluster nextstep-staging-cluster \
             --services nextstep-staging-service
-          echo "✅ Staging environment deployed successfully!"
+          echo "Staging environment deployed successfully"
 
   # =========================================================================
   # 2. PRODUCTION DEPLOYMENT
   # Triggered automatically on push to 'main', or manually
   # =========================================================================
   deploy-production:
-    name: 🚀 Deploy — Production
+    name: Deploy - Production
     runs-on: ubuntu-latest
     if: github.event.inputs.environment == 'production'
     environment: production
 
     steps:
-      - name: 📥 Checkout
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: 🔑 Configure AWS Credentials (OIDC)
+      - name: Configure AWS Credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: ${{ vars.AWS_FARGATE_PROD_ROLE_ARN || vars.AWS_FARGATE_ROLE_ARN || vars.AWS_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION || 'us-east-1' }}
 
-      - name: 🔐 Log in to Amazon ECR
+      - name: Log in to Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v2
 
-      - name: 🐳 Build & Push Docker Images to ECR (Production)
+      - name: Build and Push Docker Images to ECR (Production)
         env:
           REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           PROJECT: nextstep/production
@@ -137,7 +137,7 @@ jobs:
           docker push $REGISTRY/$PROJECT/nginx:$IMAGE_TAG
           docker push $REGISTRY/$PROJECT/nginx:latest
 
-      - name: 🔄 Update ECS Production Service
+      - name: Update ECS Production Service
         run: |
           echo "Triggering zero-downtime rolling update on ECS Production Service..."
           aws ecs update-service \
@@ -145,10 +145,10 @@ jobs:
             --service nextstep-production-service \
             --force-new-deployment
 
-      - name: ⏳ Wait for Production Stability
+      - name: Wait for Production Stability
         run: |
           echo "Waiting for Production tasks to stabilize..."
           aws ecs wait services-stable \
             --cluster nextstep-production-cluster \
             --services nextstep-production-service
-          echo "✅ Production environment deployed successfully with zero downtime!"
+          echo "Production environment deployed successfully with zero downtime"

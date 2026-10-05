@@ -1,15 +1,15 @@
 # =============================================================================
 # .github/workflows/ci.yml
-# NextStep — Pipeline CI (orchestrateur)
+# NextStep — pipeline CI (orchestrateur)
 #
 # Ce fichier ne fait qu'ordonner les jobs. Chaque composant a son propre
 # workflow réutilisable dans ce dossier :
 #
-#   _ci-agents.yml    → ruff + pytest + couverture Codecov
-#   _ci-frontend.yml  → tsc + Vitest + build Angular
-#   _ci-backend.yml   → build .NET + tests xUnit
-#   _ci-docker.yml    → validation docker compose + build des 3 images
-#   _ci-sonar.yml     → SonarQube (ignoré si non configuré)
+#   _ci-agents.yml    ruff + pytest + couverture Codecov
+#   _ci-frontend.yml  tsc + Vitest + build Angular
+#   _ci-backend.yml   build .NET + tests xUnit
+#   _ci-docker.yml    validation docker compose + build des 3 images
+#   _ci-sonar.yml     SonarQube, ignoré si non configuré
 #
 # Pour ajouter un composant : créer son _ci-<nom>.yml avec `on: workflow_call`
 # puis l'ajouter dans la liste `jobs:` ci-dessous et dans le tableau du résumé.
@@ -18,7 +18,7 @@
 # CD, pas par ce fichier.
 # =============================================================================
 
-name: CI — NextStep
+name: CI - NextStep
 
 on:
   push:
@@ -50,27 +50,28 @@ concurrency:
 
 jobs:
   agents:
-    name: "🐍 Agents Python"
+    name: Agents Python
     uses: ./.github/workflows/_ci-agents.yml
 
   frontend:
-    name: "🅰️ Frontend Angular"
+    name: Frontend Angular
     uses: ./.github/workflows/_ci-frontend.yml
 
   backend:
-    name: "🔷 Backend .NET"
+    name: Backend .NET
     uses: ./.github/workflows/_ci-backend.yml
 
   docker:
-    name: "🐳 Docker Compose"
+    name: Docker Compose
     uses: ./.github/workflows/_ci-docker.yml
 
-  # ───────────────────────────────────────────────────────────────────────────
-  # RÉSUMÉ — point de contrôle unique required dans les règles de branche.
-  # Échoue si un seul composant a échoué (les jobs "skipped" ne bloquent pas).
-  # ───────────────────────────────────────────────────────────────────────────
+  # ---------------------------------------------------------------------------
+  # Résumé : point de contrôle unique, à déclarer required dans les règles de
+  # branche. Échoue si un seul composant a échoué. Un job "skipped" ne bloque
+  # pas.
+  # ---------------------------------------------------------------------------
   summary:
-    name: "📋 CI Summary"
+    name: CI Summary
     runs-on: ubuntu-latest
     timeout-minutes: 10
     needs: [agents, frontend, backend, docker]
@@ -79,7 +80,7 @@ jobs:
       contents: read
 
     steps:
-      - name: "📋 Rapport"
+      - name: Rapport
         env:
           R_AGENTS: ${{ needs.agents.result }}
           R_FRONTEND: ${{ needs.frontend.result }}
@@ -88,28 +89,28 @@ jobs:
         run: |
           status() {
             case "$1" in
-              success) echo "✅ Succès" ;;
-              skipped) echo "⏭️ Ignoré" ;;
-              *)       echo "❌ Échec" ;;
+              success) echo "Succès" ;;
+              skipped) echo "Ignoré" ;;
+              *)       echo "Échec" ;;
             esac
           }
 
           {
-            echo "## 📊 Résultats CI NextStep"
+            echo "## Résultats CI NextStep"
             echo ""
             echo "| Composant | Statut |"
             echo "|-----------|--------|"
-            echo "| 🐍 Agents Python   | $(status "$R_AGENTS")   |"
-            echo "| 🅰️ Frontend Angular | $(status "$R_FRONTEND") |"
-            echo "| 🔷 Backend .NET     | $(status "$R_BACKEND")   |"
-            echo "| 🐳 Docker Compose   | $(status "$R_DOCKER")    |"
+            echo "| Agents Python    | $(status "$R_AGENTS")   |"
+            echo "| Frontend Angular | $(status "$R_FRONTEND") |"
+            echo "| Backend .NET     | $(status "$R_BACKEND")   |"
+            echo "| Docker Compose   | $(status "$R_DOCKER")    |"
             echo ""
             echo "**Branche :** \`${{ github.ref_name }}\`"
             echo "**Commit :** \`${{ github.sha }}\`"
             echo "**Déclenché par :** @${{ github.actor }}"
           } >> "$GITHUB_STEP_SUMMARY"
 
-      - name: "❌ Échouer si un composant est en échec"
+      - name: Échouer si un composant est en échec
         if: >-
           needs.agents.result == 'failure' ||
           needs.frontend.result == 'failure' ||
@@ -119,9 +120,9 @@ jobs:
           echo "::error::Un ou plusieurs composants CI ont échoué."
           exit 1
 
-  # Analyse SonarQube — ignorée tant qu'aucune instance n'est configurée.
+  # Analyse SonarQube : ignorée tant qu'aucune instance n'est configurée.
   sonar:
-    name: "🔍 SonarQube"
+    name: SonarQube
     needs: [agents, frontend, backend]
     if: >-
       always() &&

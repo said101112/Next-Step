@@ -22,35 +22,35 @@ defaults:
 
 jobs:
   ci-backend:
-    name: "🔷 Backend .NET"
+    name: Backend .NET
     runs-on: ubuntu-latest
     timeout-minutes: 25
 
     steps:
-      - name: "📥 Checkout"
+      - name: Checkout
         uses: actions/checkout@v4
 
-      - name: "🔷 Setup .NET ${{ env.DOTNET_VERSION }}"
+      - name: Setup .NET ${{ env.DOTNET_VERSION }}
         uses: actions/setup-dotnet@v4
         with:
           dotnet-version: ${{ env.DOTNET_VERSION }}
           cache: true
           cache-dependency-path: backend/**/*.csproj
 
-      - name: "📦 Restaurer les dépendances NuGet"
+      - name: Restaurer les dépendances NuGet
         run: dotnet restore
 
-      - name: "🔨 Build .NET"
+      - name: Build .NET
         run: dotnet build --no-restore --configuration Release
 
-      - name: "🧪 Tests .NET"
+      - name: Tests .NET
         run: |
           dotnet test --no-build --configuration Release \
             --verbosity normal \
             --logger "trx;LogFileName=test-results.trx" \
             --results-directory ./TestResults
 
-      - name: "📤 Upload test results"
+      - name: Upload test results
         uses: actions/upload-artifact@v4
         if: always()
         with:
