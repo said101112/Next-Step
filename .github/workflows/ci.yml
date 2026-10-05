@@ -52,6 +52,8 @@ jobs:
   ci-agents:
     name: "🐍 Agents Python"
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     defaults:
       run:
         working-directory: agents
@@ -88,51 +90,28 @@ jobs:
           python -c "
           from app.domain.offer_analyzer.schemas.state import OfferAnalyzerState
           from app.domain.offer_analyzer.agents.agent import offer_analyzer_node
-          from app.domain.profile_retriever.agents.agent import profile_retriever_node
+          from app.domain.profile_retriever.service import ProfileRetrieverService
           from app.domain.pipeline.workflow import build_offer_pipeline
           from app.core.utils.normalizer import normalize_skills
-          
+
           # Vérification de la création du graphe (Architecture Service-Based)
           g = build_offer_pipeline()
           print('✅ Architecture Domain-Driven (Service-Based) OK')
           "
 
-
       # ── Tests unitaires ─────────────────────────────────────
-      - name: "🧪 Tests unitaires — Normalizer"
-        run: |
-          python -m pytest tests/test_normalizer.py -v --tb=short
-
-      - name: "🧪 Tests unitaires — Scorer"
-        run: |
-          python -m pytest tests/test_scorer.py -v --tb=short
-
-      - name: "🧪 Tests unitaires — Company Signals"
-        run: |
-          python -m pytest tests/test_company_signals.py -v --tb=short
-
-      - name: "🧪 Tests unitaires — CV Builder"
-        run: |
-          python -m pytest tests/test_cv_builder.py -v --tb=short
-
-      # ── Tests d'intégration API ─────────────────────────────
-      - name: "🔌 Tests d'intégration — FastAPI (sans LLM/DB)"
+      - name: "🧪 Suite de tests — Agents Python"
         env:
           LLM_PROVIDER: "groq"
           GROQ_API_KEY: "test-key-not-real"
           DATABASE_URL: "postgresql+asyncpg://test:test@localhost:5432/test_db"
-        run: |
-          python -m pytest tests/test_api.py -v --tb=short \
-            -k "health or company or cv_data or matched_skills or missing_body"
+        run: python -m pytest tests -v --tb=short
 
       # ── Rapport de couverture ────────────────────────────────
       - name: "📊 Coverage report"
         run: |
           pip install pytest-cov
-          python -m pytest tests/test_normalizer.py tests/test_scorer.py \
-            tests/test_company_signals.py tests/test_cv_builder.py \
-            --cov=app --cov-report=term-missing --cov-report=xml \
-            -q
+          python -m pytest tests --cov=app --cov-report=term-missing --cov-report=xml -q
         continue-on-error: true
 
       - name: "📤 Upload coverage to Codecov"
@@ -293,7 +272,10 @@ jobs:
     name: "🔍 SonarQube Analysis"
     runs-on: ubuntu-latest
     needs: [ci-agents, ci-frontend, ci-backend]
-    if: always() && (needs.ci-agents.result == 'success' || needs.ci-frontend.result == 'success' || needs.ci-backend.result == 'success')
+    if: >-
+      always() &&
+      (needs.ci-agents.result == 'success' || needs.ci-frontend.result == 'success' || needs.ci-backend.result == 'success') &&
+      vars.SONAR_HOST_URL != ''
     steps:
       - name: "📥 Checkout"
         uses: actions/checkout@v4
