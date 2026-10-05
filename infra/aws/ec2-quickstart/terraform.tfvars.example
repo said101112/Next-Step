@@ -4,6 +4,11 @@ aws_region  = "us-east-1"
 repo_url    = "https://github.com/<your-account>/<your-repo>.git"
 repo_branch = "main"
 
+# Repository allowed to deploy via OIDC (owner/repo). Must be the repository
+# that runs .github/workflows/deploy-ec2.yml. The deploy role trust policy is
+# scoped to repo:<github_repo>:*, so a mismatch fails the AWS credentials step.
+github_repo = "said101112/Next-Step"
+
 # Production .env (git-ignored). Start from the repo's .env.example.
 env_file = ".env.prod"
 

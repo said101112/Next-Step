@@ -8,9 +8,9 @@ Internet ──80/443──► EC2 (Ubuntu 24.04, Docker)
                      ├─ Caddy          HTTPS + Let's Encrypt (only when domain_name is set)
                      └─ nginx          reverse proxy from init_config/nginx/nginx.conf
                         ├─ /          → frontend (Angular, nginx)
-                        ├─ /api /hubs /uploads → backend (.NET)
-                        ├─ /agents    → agents (FastAPI)
-                        ├─ /auth      → Keycloak
+├─ /api /hubs /uploads → backend (.NET)
+                         │     └─ /api/agents/* proxied to agents (FastAPI)
+                         ├─ /auth      → Keycloak
                         └─ PostgreSQL (internal only, never exposed)
 ```
 
@@ -50,6 +50,21 @@ parameter holding your `.env`.
    $(terraform output -raw connect_command)
    sudo tail -f /var/log/nextstep-bootstrap.log
    ```
+
+## GitHub Actions variables
+
+The deploy workflow authenticates with OIDC and reads two repository **variables**
+(Settings → Secrets and variables → Actions → Variables). No repository *secrets*
+are needed: the production `.env` lives in SSM Parameter Store on the instance.
+
+| Variable | Required | Value |
+|---|---|---|
+| `AWS_EC2_ROLE_ARN` | yes | `terraform output -raw github_actions_role_arn` |
+| `AWS_REGION` | no | same region as `aws_region` in `terraform.tfvars`; defaults to `us-east-1` |
+
+`AWS_ROLE_ARN` is accepted as a fallback name. If `github_repo` in
+`terraform.tfvars` does not match the repository running the workflow, the trust
+policy rejects the token and the AWS credentials step fails with `AccessDenied`.
 
 ## Operate
 

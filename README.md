@@ -197,7 +197,7 @@ Services (dev):
 ```bash
 docker compose -f docker-compose.yml -f docker-compose.prod.yml up -d --build
 ```
-Renseigner `PUBLIC_URL` dans `.env`. Routes: `/api`, `/hubs`, `/uploads` → backend, `/agents` → agents, `/auth` → Keycloak, `/` → frontend.
+Renseigner `PUBLIC_URL` dans `.env`. Routes: `/api`, `/hubs`, `/uploads` → backend, `/api/agents/*` → agents (proxy backend, service interne), `/auth` → Keycloak, `/` → frontend.
 
 Stockage des fichiers: disque local (volume Docker) par défaut (`STORAGE_MODE=Local`). MinIO est optionnel via `--profile minio` (voir `docker-compose.yml`).
 

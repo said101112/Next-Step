@@ -64,9 +64,9 @@ variable "key_name" {
 }
 
 variable "github_repo" {
-  description = "GitHub repository (owner/repo) allowed to deploy via OIDC"
+  description = "GitHub repository (owner/repo) allowed to deploy via OIDC. Must match the repository that runs deploy-ec2.yml, otherwise the trust policy denies AssumeRoleWithWebIdentity."
   type        = string
-  default     = "said101112/Next-Step-v2"
+  default     = "said101112/Next-Step"
 }
 
 variable "create_oidc_provider" {
